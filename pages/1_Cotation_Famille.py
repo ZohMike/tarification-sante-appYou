@@ -10,6 +10,27 @@ from utils.pricing import calculer_prime_ttc, lookup_prime_pure, format_fcfa
 
 st.set_page_config(page_title="Cotation Famille", page_icon="👨‍👩‍👧‍👦", layout="wide")
 
+st.markdown("""
+<style>
+    :root {
+        --primary: #8c4b27;
+        --secondary: #d48b59;
+        --accent: #c0392b;
+        --bg-light: #fdfaf6;
+        --text-color: #333333;
+    }
+    .stApp { background-color: var(--bg-light); color: var(--text-color); font-family: 'Inter', sans-serif; }
+    div[data-testid="metric-container"] {
+        background-color: white; border: 1px solid #e1d3c1; padding: 1rem 1.5rem;
+        border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+    div[data-testid="metric-container"] label { color: var(--primary) !important; font-weight: 600 !important; font-size: 1.1rem !important; }
+    div[data-testid="metric-container"] div[data-testid="stMetricValue"] { color: #2c3e50 !important; font-size: 1.8rem !important; font-weight: 800 !important; }
+    section[data-testid="stSidebar"] { background-color: #f6efe8; border-right: 1px solid #e1d3c1; }
+    h1, h2, h3 { color: var(--primary) !important; font-weight: 700 !important; }
+</style>
+""", unsafe_allow_html=True)
+
 st.markdown("<h1 style='color: #8c4b27;'>👨‍👩‍👧‍👦 Cotation Famille</h1>", unsafe_allow_html=True)
 st.markdown("<p style='font-size: 1.1rem; color: #555;'>Tarifiez un foyer complet (Assuré principal, conjoint, enfants) et obtenez la prime globale.</p>", unsafe_allow_html=True)
 st.divider()
@@ -24,17 +45,11 @@ except Exception as e:
     st.error(f"Erreur de chargement des données: {e}")
     st.stop()
 
-# --- Paramètres Globaux du contrat ---
-st.markdown("<h3 style='color: #8c4b27;'>🌍 Paramètres du Contrat</h3>", unsafe_allow_html=True)
-col_z, col_c, col_r = st.columns(3)
-with col_z:
-    zone = st.selectbox("Zone Géographique du foyer", ["ABIDJAN", "HORS-ABIDJAN"])
-with col_c:
-    contrat = st.selectbox("Type de contrat", ["INDIVIDUEL", "COLLECTIF"])
-with col_r:
-    reseau = st.selectbox("Réseau de Soins", df_scenarios['Scenario'].tolist())
-
-st.markdown("<br>", unsafe_allow_html=True)
+# --- Sidebar Inputs ---
+st.sidebar.markdown("<h3 style='color: #8c4b27;'>🌍 Paramètres du Contrat</h3>", unsafe_allow_html=True)
+zone = st.sidebar.selectbox("Zone Géographique", ["ABIDJAN", "HORS-ABIDJAN"])
+contrat = st.sidebar.selectbox("Type de contrat", ["COLLECTIF", "INDIVIDUEL"])
+reseau = st.sidebar.selectbox("Réseau de Soins", df_scenarios['Scenario'].tolist())
 
 # --- Saisie de la composition familiale ---
 st.markdown("<h3 style='color: #8c4b27;'>👥 Composition Familiale</h3>", unsafe_allow_html=True)
@@ -104,8 +119,6 @@ for i in range(nb_enfants):
 st.divider()
 
 # --- CALCULS ---
-st.markdown("<h3 style='color: #8c4b27;'>💰 Résultats de la Cotation</h3>", unsafe_allow_html=True)
-
 total_prime_pure = 0
 total_ttc = 0
 resultats_liste = []
@@ -119,7 +132,8 @@ for m in membres:
             "Membre": m["Rôle"],
             "Profil": f"{m['Age_Label']}, {m['Sexe']}",
             "Prime Pure": "-",
-            "Prime TTC": "Erreur : Profil Inconnu"
+            "Majoration & Frais": "-",
+            "Prime TTC": "Erreur : Inconnu"
         })
     else:
         pp = row['pp_totale']
@@ -135,24 +149,28 @@ for m in membres:
         resultats_liste.append({
             "Membre": m["Rôle"],
             "Profil": f"{m['Age_Label']}, {m['Sexe']}",
-            "Prime Pure": format_fcfa(pp),
+            "Prime Pure": format_fcfa(pp_ajustee),
+            "Majoration & Frais": format_fcfa(res['ttc'] - pp_ajustee),
             "Prime TTC": format_fcfa(res['ttc'])
         })
 
 if profils_introuvables:
     st.warning("⚠️ Certains profils saisis n'existent pas dans la base d'apprentissage (ex: Enfant dans la classe 61+ ans). Veuillez vérifier la saisie.")
 
-col1, col2, col3 = st.columns(3)
+# Affichage des métriques globales (styled as in Individuelle)
+col1, col2, col3, col4 = st.columns(4)
 with col1:
-    st.metric("Membres Couverts", f"{len(membres)} personnes")
+    st.metric("Membres Couverts", f"{len(membres)} personne(s)")
 with col2:
-    st.metric("Prime Pure Globale (Foyer)", format_fcfa(total_prime_pure))
+    st.metric("Prime Pure Globale", format_fcfa(total_prime_pure))
 with col3:
-    st.metric("PRIME TTC GLOBALE (Foyer)", format_fcfa(total_ttc))
+    st.metric("Majoration & Frais", format_fcfa(total_ttc - total_prime_pure))
+with col4:
+    st.metric("PRIME TTC GLOBALE", format_fcfa(total_ttc))
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-st.markdown("#### Détail par membre")
+# Tableau détaillé
+st.markdown("<h3 style='color: #8c4b27;'>Détail par membre</h3>", unsafe_allow_html=True)
 df_res = pd.DataFrame(resultats_liste)
 st.dataframe(df_res, use_container_width=True, hide_index=True)
-
