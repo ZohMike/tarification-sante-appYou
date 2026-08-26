@@ -38,10 +38,11 @@ st.divider()
 def load_data():
     df_totale = pd.read_csv("data/table_prime_pure_totale.csv")
     df_complete = pd.read_csv("data/table_prime_pure_complete.csv")
-    return df_totale, df_complete
+    df_scenarios = pd.read_csv("data/scenarios.csv")
+    return df_totale, df_complete, df_scenarios
 
 try:
-    df_totale, df_complete = load_data()
+    df_totale, df_complete, df_scenarios = load_data()
 except Exception as e:
     st.error(f"Erreur de chargement des données: {e}")
     st.stop()
@@ -56,6 +57,8 @@ filiation = st.sidebar.selectbox("Filiation", ["ASSURÉ PRINCIPAL", "CONJOINT", 
 ald_str = "Oui"
 zone = st.sidebar.selectbox("Zone Géographique", ["ABIDJAN", "HORS-ABIDJAN"])
 contrat = st.sidebar.selectbox("Type de contrat", ["COLLECTIF", "INDIVIDUEL"])
+reseau = st.sidebar.selectbox("Réseau de Soins", df_scenarios['Scenario'].tolist())
+
 
 row = lookup_prime_pure(df_totale, classe_age, sexe, filiation, ald_str, zone, contrat)
 
@@ -63,7 +66,13 @@ if row is None:
     st.warning("⚠️ Ce profil exact n'existe pas dans la base d'apprentissage des modèles (ex: Enfant de 61+ ans). Veuillez ajuster les paramètres.")
 else:
     pp_val = row['pp_totale']
-    res = calculer_prime_ttc(pp_val)
+    
+    # Appliquer la réduction du réseau
+    economie_pct = df_scenarios[df_scenarios['Scenario'] == reseau]['Economie_Pct'].values[0]
+    ajustement = 1 - (economie_pct / 100)
+    pp_ajustee = pp_val * ajustement
+    
+    res = calculer_prime_ttc(pp_ajustee)
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:

@@ -16,21 +16,23 @@ st.divider()
 
 @st.cache_data
 def load_data():
-    return pd.read_csv("data/table_prime_pure_totale.csv")
+    return pd.read_csv("data/table_prime_pure_totale.csv"), pd.read_csv("data/scenarios.csv")
 
 try:
-    df_totale = load_data()
+    df_totale, df_scenarios = load_data()
 except Exception as e:
     st.error(f"Erreur de chargement des données: {e}")
     st.stop()
 
 # --- Paramètres Globaux du contrat ---
 st.markdown("<h3 style='color: #8c4b27;'>🌍 Paramètres du Contrat</h3>", unsafe_allow_html=True)
-col_z, col_c = st.columns(2)
+col_z, col_c, col_r = st.columns(3)
 with col_z:
     zone = st.selectbox("Zone Géographique du foyer", ["ABIDJAN", "HORS-ABIDJAN"])
 with col_c:
     contrat = st.selectbox("Type de contrat", ["INDIVIDUEL", "COLLECTIF"])
+with col_r:
+    reseau = st.selectbox("Réseau de Soins", df_scenarios['Scenario'].tolist())
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -121,8 +123,14 @@ for m in membres:
         })
     else:
         pp = row['pp_totale']
-        res = calculer_prime_ttc(pp)
-        total_prime_pure += pp
+        
+        # Appliquer la réduction du réseau
+        economie_pct = df_scenarios[df_scenarios['Scenario'] == reseau]['Economie_Pct'].values[0]
+        ajustement = 1 - (economie_pct / 100)
+        pp_ajustee = pp * ajustement
+        
+        res = calculer_prime_ttc(pp_ajustee)
+        total_prime_pure += pp_ajustee
         total_ttc += res['ttc']
         resultats_liste.append({
             "Membre": m["Rôle"],
