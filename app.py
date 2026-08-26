@@ -123,9 +123,9 @@ def main():
     with col2:
         st.markdown("""
         <div style='background-color: white; padding: 20px; border-radius: 10px; border: 1px solid #e1d3c1; text-align: center; height: 200px;'>
-            <h3 style='font-size: 40px; margin: 0;'>👥</h3>
-            <h4 style='color: #8c4b27;'>Cotation Flotte</h4>
-            <p style='color: #666; font-size: 14px;'>Importez un fichier de membres pour tarifer l'ensemble d'un groupe instantanément.</p>
+            <h3 style='font-size: 40px; margin: 0;'>👨‍👩‍👧‍👦</h3>
+            <h4 style='color: #8c4b27;'>Cotation Famille</h4>
+            <p style='color: #666; font-size: 14px;'>Simulez instantanément la tarification globale pour un foyer (assuré, conjoint, enfants).</p>
         </div>
         """, unsafe_allow_html=True)
         
