@@ -53,8 +53,7 @@ classe_age_label = st.sidebar.selectbox("Classe d'âge", list(CLASSES_AGE.values
 classe_age = list(CLASSES_AGE.keys())[list(CLASSES_AGE.values()).index(classe_age_label)]
 sexe = st.sidebar.radio("Sexe", ["M", "F"], horizontal=True)
 filiation = st.sidebar.selectbox("Filiation", ["ASSURÉ PRINCIPAL", "CONJOINT", "ENFANT"])
-ald_str = st.sidebar.radio("Affections Longue Durée (ALD)", ["Non", "Oui"], horizontal=True)
-ald = 1 if ald_str == "Oui" else 0
+ald_str = "Oui"
 zone = st.sidebar.selectbox("Zone Géographique", ["ABIDJAN", "HORS-ABIDJAN"])
 contrat = st.sidebar.selectbox("Type de contrat", ["COLLECTIF", "INDIVIDUEL"])
 

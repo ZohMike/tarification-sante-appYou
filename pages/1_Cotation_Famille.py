@@ -41,14 +41,12 @@ membres = [] # Liste pour stocker les profils à coter
 
 # 1. Assuré Principal
 st.markdown("#### 👤 Assuré Principal")
-col1, col2, col3 = st.columns(3)
+col1, col2 = st.columns(2)
 with col1:
     ap_age_label = st.selectbox("Classe d'âge (Principal)", list(CLASSES_AGE.values()), index=3, key="ap_age")
     ap_age = list(CLASSES_AGE.keys())[list(CLASSES_AGE.values()).index(ap_age_label)]
 with col2:
     ap_sexe = st.radio("Sexe (Principal)", ["M", "F"], horizontal=True, key="ap_sexe")
-with col3:
-    ap_ald = st.radio("ALD (Principal)", ["Non", "Oui"], horizontal=True, key="ap_ald")
 
 membres.append({
     "Rôle": "Assuré Principal",
@@ -56,21 +54,19 @@ membres.append({
     "Age": ap_age,
     "Age_Label": ap_age_label,
     "Sexe": ap_sexe,
-    "ALD": ap_ald
+    "ALD": "Oui"
 })
 
 # 2. Conjoint
 st.markdown("#### 👩‍❤️‍👨 Conjoint")
 has_conjoint = st.checkbox("Ajouter un(e) conjoint(e)")
 if has_conjoint:
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     with col1:
         cj_age_label = st.selectbox("Classe d'âge (Conjoint)", list(CLASSES_AGE.values()), index=3, key="cj_age")
         cj_age = list(CLASSES_AGE.keys())[list(CLASSES_AGE.values()).index(cj_age_label)]
     with col2:
         cj_sexe = st.radio("Sexe (Conjoint)", ["M", "F"], horizontal=True, key="cj_sexe")
-    with col3:
-        cj_ald = st.radio("ALD (Conjoint)", ["Non", "Oui"], horizontal=True, key="cj_ald")
     
     membres.append({
         "Rôle": "Conjoint",
@@ -78,7 +74,7 @@ if has_conjoint:
         "Age": cj_age,
         "Age_Label": cj_age_label,
         "Sexe": cj_sexe,
-        "ALD": cj_ald
+        "ALD": "Oui"
     })
 
 # 3. Enfants
@@ -87,15 +83,12 @@ nb_enfants = st.number_input("Nombre d'enfants", min_value=0, max_value=10, valu
 
 for i in range(nb_enfants):
     st.markdown(f"**Enfant {i+1}**")
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     with col1:
-        # Default age for children usually 0-18 (index 0)
         enf_age_label = st.selectbox(f"Classe d'âge (Enfant {i+1})", list(CLASSES_AGE.values()), index=0, key=f"enf_age_{i}")
         enf_age = list(CLASSES_AGE.keys())[list(CLASSES_AGE.values()).index(enf_age_label)]
     with col2:
         enf_sexe = st.radio(f"Sexe (Enfant {i+1})", ["M", "F"], horizontal=True, key=f"enf_sexe_{i}")
-    with col3:
-        enf_ald = st.radio(f"ALD (Enfant {i+1})", ["Non", "Oui"], horizontal=True, key=f"enf_ald_{i}")
         
     membres.append({
         "Rôle": f"Enfant {i+1}",
@@ -103,7 +96,7 @@ for i in range(nb_enfants):
         "Age": enf_age,
         "Age_Label": enf_age_label,
         "Sexe": enf_sexe,
-        "ALD": enf_ald
+        "ALD": "Oui"
     })
 
 st.divider()
@@ -122,7 +115,7 @@ for m in membres:
         profils_introuvables = True
         resultats_liste.append({
             "Membre": m["Rôle"],
-            "Profil": f"{m['Age_Label']}, {m['Sexe']}, ALD:{m['ALD']}",
+            "Profil": f"{m['Age_Label']}, {m['Sexe']}",
             "Prime Pure": "-",
             "Prime TTC": "Erreur : Profil Inconnu"
         })
@@ -133,7 +126,7 @@ for m in membres:
         total_ttc += res['ttc']
         resultats_liste.append({
             "Membre": m["Rôle"],
-            "Profil": f"{m['Age_Label']}, {m['Sexe']}, ALD:{m['ALD']}",
+            "Profil": f"{m['Age_Label']}, {m['Sexe']}",
             "Prime Pure": format_fcfa(pp),
             "Prime TTC": format_fcfa(res['ttc'])
         })
@@ -141,7 +134,6 @@ for m in membres:
 if profils_introuvables:
     st.warning("⚠️ Certains profils saisis n'existent pas dans la base d'apprentissage (ex: Enfant dans la classe 61+ ans). Veuillez vérifier la saisie.")
 
-# Affichage des métriques globales
 col1, col2, col3 = st.columns(3)
 with col1:
     st.metric("Membres Couverts", f"{len(membres)} personnes")
@@ -152,7 +144,6 @@ with col3:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Tableau détaillé
 st.markdown("#### Détail par membre")
 df_res = pd.DataFrame(resultats_liste)
 st.dataframe(df_res, use_container_width=True, hide_index=True)
